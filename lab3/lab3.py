@@ -46,7 +46,8 @@ def program3():
         time.sleep(0.1)
     stop()
 
-def program4(k): 
+def program4(): 
+    k = -100
     start_t = time.time()
     x = sense()
     while x != 50:
@@ -82,7 +83,7 @@ def program5(k):
 
 #
 # -250: 3.132249116897583
-# -50: did not adjust, get time from video
+# -50: 0.96 did not adjust
 #-1000: too fast, values sense around 50 but wouldnt stop
 
 if __name__=='__main__':
