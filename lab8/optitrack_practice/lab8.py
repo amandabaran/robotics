@@ -69,12 +69,12 @@ try:
     print("STARTING POSITON: ", start)
 
     # desired end positon
-    end = np.array([-1.0,-2.0])
+    end = np.array([5.0,2.0])
     print("DESIRED POSITON: ", end)
 
     # K values
-    turn_k = 500
-    move_k = 2000
+    turn_k = 7000
+    move_k = 1000
 
     s_t = time.time()
 
@@ -86,14 +86,22 @@ try:
         y = p[1]
         theta = p[3]
 
+        #convert theta to radians
+        theta = theta * (np.pi / 180)
+
         x_t = np.array([x, y]) 
 
         dist_err = end - x_t
+
         # distance to end goal
         r = np.linalg.norm(dist_err)
 
+        # break when close to destination
+        if (r < 0.2):
+            stop()
+
         # desired angle
-        angle = np.arctan2(dist_err[1]/dist_err[0])
+        angle = np.arctan2(dist_err[1], dist_err[0])
         
         # needed correction to reach desired angle
         angle_diff = np.arctan2(np.sin(angle - theta), np.cos(angle - theta))
@@ -102,7 +110,7 @@ try:
         print(time.time()-s_t, r, angle_diff, sep=",")
         
         # Caclulate velocity and angular velocity
-        v = move_k * r  
+        v = move_k * r 
         w = turn_k * angle_diff
 
         # Controller 
