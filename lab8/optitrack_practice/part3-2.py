@@ -61,20 +61,19 @@ def get_position():
             return[x,y,z,r]
             # print('Last position', x, y, z, ' rotation', r)
 
+def circle(n):
+    return [np.array([np.cos(t), np.sin(t)]) for t in np.linspace(0., 2. * np.pi, n, endpoint=False)]
 
 try:
     connect()
 
-    start = get_position()
-    print("STARTING POSITON: ", start)
-
-    # desired end positon
-    end = np.array([-1.0,-2.0])
-    print("DESIRED POSITON: ", end)
+    # waypoints
+    points = circle(12)
+    xd = points[0]
 
     # K values
-    turn_k = 500
-    move_k = 2000
+    k1 = 1.0
+    k2 = 1.0
 
     s_t = time.time()
 
@@ -88,7 +87,7 @@ try:
 
         x_t = np.array([x, y]) 
 
-        dist_err = end - x_t
+        dist_err = xd - x_t
         # distance to end goal
         r = np.linalg.norm(dist_err)
 
@@ -102,8 +101,8 @@ try:
         print(time.time()-s_t, r, angle_diff, sep=",")
         
         # Caclulate velocity and angular velocity
-        v = move_k * r  
-        w = turn_k * angle_diff
+        v = k1 * r  
+        w = k2 * angle_diff
 
         # Controller 
         u = np.array([v - w, v + w])
@@ -121,5 +120,5 @@ except KeyboardInterrupt or Exception:
     # STOP
     stop()
 
-
+    
 
