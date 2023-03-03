@@ -69,12 +69,12 @@ try:
     print("STARTING POSITON: ", start)
 
     # desired end positon
-    end = np.array([5.0,2.0])
+    end = np.array([6.0,2.0])
     print("DESIRED POSITON: ", end)
 
     # K values
-    turn_k = 7000
     move_k = 1000
+    turn_k = 7000
 
     s_t = time.time()
 
@@ -97,7 +97,7 @@ try:
         r = np.linalg.norm(dist_err)
 
         # break when close to destination
-        if (r < 0.2):
+        if (r < 0.25):
             stop()
 
         # desired angle

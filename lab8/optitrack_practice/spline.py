@@ -7,6 +7,7 @@ import numpy as np
 from NatNetClient import NatNetClient
 from util import quaternion_to_euler_angle_vectorized1
 
+import trajectory.piecewise as piecewise
 
 positions = {}
 rotations = {}
@@ -61,19 +62,32 @@ def get_position():
             return[x,y,z,r]
             # print('Last position', x, y, z, ' rotation', r)
 
-def circle(n):
-    return [np.array([np.cos(t), np.sin(t)]) for t in np.linspace(0., 2. * np.pi, n, endpoint=False)]
+# def square():
+#     return [np.array([5., 3.]), np.array([4., 3.]), np.array([3., 3.]), np.array([2., 3.]), np.array([1., 3.]), np.array([0., 3.]), np.array([-1., 3.]), np.array([-2., 3.]),
+#             np.array([-3., 3.]), np.array([-3., 2.]), np.array([-3., 1.]), np.array([-3., 0.]), np.array([-3., -1.]),
+#             np.array([-3., -2.]), np.array([-2., -2.]), np.array([-1., -2.]), np.array([0., -2.]), np.array([1., -2.]), np.array([2., -2.]), np.array([3., -2.]), np.array([4., -2.]),
+#             np.array([5., -2.])]
 
 try:
     connect()
 
-    # waypoints
-    points = circle(12)
+    # points and velocities at eacch point
+    x_points = [5.0, -3.0, -3.0, 5.0]
+    y_points = [3.0, 3.0, -2.0, -2.0]
+    vx = [0.0, 0.0, 0.0, 0.0]
+    vy = [0.0, 0.0, 0.0, 0.0]
+    t = [0.0, 1.0, 2.0, 3.0]
+
+    time, trajectory_x, trajectory_y, trajectory_dx, trajectory_dy = piecewise.spline_2d(x_points, y_points, vx, vy, t)
+
+    points = [np.array([x, y]) for x, y in zip(trajectory_x, trajectory_y) ]
+   
+    point_num = 0
     xd = points[0]
 
     # K values
-    k1 = 1.0
-    k2 = 1.0
+    k1 = 1000
+    k2 = 7000
 
     s_t = time.time()
 
@@ -85,14 +99,26 @@ try:
         y = p[1]
         theta = p[3]
 
+        #convert theta to radians
+        theta = theta * (np.pi / 180)
+
         x_t = np.array([x, y]) 
 
         dist_err = xd - x_t
+
         # distance to end goal
         r = np.linalg.norm(dist_err)
 
+        # break when close to destination
+        if (r < 0.2):
+            point_num += 1
+            # move to next point as goal
+            xd = points[point_num]
+            dist_err = end - x_t
+            r = np.linalg.norm(err)
+
         # desired angle
-        angle = np.arctan2(dist_err[1]/dist_err[0])
+        angle = np.arctan2(dist_err[1], dist_err[0])
         
         # needed correction to reach desired angle
         angle_diff = np.arctan2(np.sin(angle - theta), np.cos(angle - theta))
@@ -101,8 +127,8 @@ try:
         print(time.time()-s_t, r, angle_diff, sep=",")
         
         # Caclulate velocity and angular velocity
-        v = k1 * r  
-        w = k2 * angle_diff
+        v = move_k * r 
+        w = turn_k * angle_diff
 
         # Controller 
         u = np.array([v - w, v + w])
@@ -119,6 +145,3 @@ try:
 except KeyboardInterrupt or Exception:
     # STOP
     stop()
-
-    
-
