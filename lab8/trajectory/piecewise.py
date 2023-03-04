@@ -1,7 +1,7 @@
 from trajectory.polynomial import *
 import numpy as np
 
-def spline_2d(X, Y, Vx, Vy, T):
+def spline_2d(X, Y, Vx, Vy, T, n=100):
     """
     Takes X, Y, Vx, Vy, and Times and returns time, trajectory in x, trajectory in y,
     trajectory dx, and trajectory dy
@@ -16,7 +16,7 @@ def spline_2d(X, Y, Vx, Vy, T):
         # duration of the interval
         duration = T[i + 1] - T[i]
         # Discretizing time in the interval
-        dis_time = np.linspace(0, duration, 100, endpoint=False)
+        dis_time = np.linspace(0, duration, n, endpoint=False)
 
         # Compute the coefficients
         poly_x = poly3_coefficients(X[i], Vx[i], X[i + 1], Vx[i + 1], duration)

@@ -30,7 +30,7 @@ def connect():
     s.connect((IP_ADDRESS, 5000))
     print('Connected')
     
-    clientAddress = "192.168.0.7"
+    clientAddress = "192.168.0.15"
     optitrackServerAddress = "192.168.0.4"
 
     # This will create a new NatNet client
@@ -69,7 +69,7 @@ try:
     print("STARTING POSITON: ", start)
 
     # desired end positon
-    end = np.array([6.0,2.0])
+    end = np.array([5.0, 3.5])
     print("DESIRED POSITON: ", end)
 
     # K values
@@ -128,6 +128,3 @@ try:
 except KeyboardInterrupt or Exception:
     # STOP
     stop()
-
-
-

@@ -12,6 +12,7 @@ positions = {}
 rotations = {}
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 robot_id = 207
+start_p = []
     
 # This is a callback function that gets connected to the NatNet client. It is called once per rigid body per frame
 def receive_rigid_body_frame(robot_id, position, rotation_quaternion):
@@ -30,7 +31,7 @@ def connect():
     s.connect((IP_ADDRESS, 5000))
     print('Connected')
     
-    clientAddress = "192.168.0.7"
+    clientAddress = "192.168.0.15"
     optitrackServerAddress = "192.168.0.4"
 
     # This will create a new NatNet client
@@ -61,28 +62,24 @@ def get_position():
             return[x,y,z,r]
             # print('Last position', x, y, z, ' rotation', r)
 
-def circle(n):
-    return [np.array([np.cos(t), np.sin(t)]) for t in np.linspace(0., 2. * np.pi, n, endpoint=False)]
+def circle(t):
+    return np.array([np.cos(t/3), np.sin(t/3)]) + start_p
 
-# def square():
-#     return [np.array([5., 3.]), np.array([4., 3.]), np.array([3., 3.]), np.array([2., 3.]), np.array([1., 3.]), np.array([0., 3.]), np.array([-1., 3.]), np.array([-2., 3.]),
-#             np.array([-3., 3.]), np.array([-3., 2.]), np.array([-3., 1.]), np.array([-3., 0.]), np.array([-3., -1.]),
-#             np.array([-3., -2.]), np.array([-2., -2.]), np.array([-1., -2.]), np.array([0., -2.]), np.array([1., -2.]), np.array([2., -2.]), np.array([3., -2.]), np.array([4., -2.]),
-#             np.array([5., -2.])]
+def circle2(n):
+    return [np.array([np.cos(t), np.sin(t)]) for t in np.linspace(0., 2. * np.pi, n, endpoint=False)]
 
 try:
     connect()
 
-    # waypoints
-    points = circle(12)
-    # print(points)
-    
+    #start position
+    start_x, start_y, _, _ = get_position()
+    start_p = np.array([start_x, start_y])
+
     point_num = 0
-    xd = points[0]
 
     # K values
-    k1 = 1000
-    k2 = 7000
+    move_k = 1000
+    turn_k = 2000
 
     s_t = time.time()
 
@@ -94,6 +91,8 @@ try:
         y = p[1]
         theta = p[3]
 
+        xd = circle(time.time()-s_t)
+
         #convert theta to radians
         theta = theta * (np.pi / 180)
 
@@ -104,14 +103,6 @@ try:
         # distance to end goal
         r = np.linalg.norm(dist_err)
 
-        # break when close to destination
-        if (r < 0.2):
-            point_num += 1
-            # move to next point as goal
-            xd = points[point_num]
-            dist_err = end - x_t
-            r = np.linalg.norm(err)
-
         # desired angle
         angle = np.arctan2(dist_err[1], dist_err[0])
         
@@ -119,7 +110,7 @@ try:
         angle_diff = np.arctan2(np.sin(angle - theta), np.cos(angle - theta))
 
         # Print results to be exported to csv
-        print(time.time()-s_t, r, angle_diff, sep=",")
+        print(time.time()-s_t, xd[0], x, xd[1], y, sep=",")
         
         # Caclulate velocity and angular velocity
         v = move_k * r 

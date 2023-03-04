@@ -7,6 +7,8 @@ import numpy as np
 from NatNetClient import NatNetClient
 from util import quaternion_to_euler_angle_vectorized1
 
+sys.path.insert(0, "..")
+
 import trajectory.piecewise as piecewise
 
 positions = {}
@@ -31,7 +33,7 @@ def connect():
     s.connect((IP_ADDRESS, 5000))
     print('Connected')
     
-    clientAddress = "192.168.0.7"
+    clientAddress = "192.168.0.15"
     optitrackServerAddress = "192.168.0.4"
 
     # This will create a new NatNet client
@@ -62,32 +64,40 @@ def get_position():
             return[x,y,z,r]
             # print('Last position', x, y, z, ' rotation', r)
 
-# def square():
-#     return [np.array([5., 3.]), np.array([4., 3.]), np.array([3., 3.]), np.array([2., 3.]), np.array([1., 3.]), np.array([0., 3.]), np.array([-1., 3.]), np.array([-2., 3.]),
-#             np.array([-3., 3.]), np.array([-3., 2.]), np.array([-3., 1.]), np.array([-3., 0.]), np.array([-3., -1.]),
-#             np.array([-3., -2.]), np.array([-2., -2.]), np.array([-1., -2.]), np.array([0., -2.]), np.array([1., -2.]), np.array([2., -2.]), np.array([3., -2.]), np.array([4., -2.]),
-#             np.array([5., -2.])]
+def rectangle(t, a):
+    p1 = np.array([5.0, 3.5])
+    p2 = np.array([-3.8, 3.5])
+    p3 = np.array([-3.8, -2.5])
+    p4 = np.array([5.0, -2.5])
+
+    t = (t/a) % 4
+
+    if t < 1:
+        return (p2-p1)*(t) + p1
+    elif t < 2:
+        return (p3-p2)*(t-1) + p2
+    elif t < 3:
+        return (p4-p3)*(t-2) + p3
+    else:
+        return (p1-p4)*(t-3) + p4
+
 
 try:
     connect()
 
-    # points and velocities at eacch point
-    x_points = [5.0, -3.0, -3.0, 5.0]
-    y_points = [3.0, 3.0, -2.0, -2.0]
-    vx = [0.0, 0.0, 0.0, 0.0]
-    vy = [0.0, 0.0, 0.0, 0.0]
-    t = [0.0, 1.0, 2.0, 3.0]
 
-    time, trajectory_x, trajectory_y, trajectory_dx, trajectory_dy = piecewise.spline_2d(x_points, y_points, vx, vy, t)
+    # time_, trajectory_x, trajectory_y, trajectory_dx, trajectory_dy = piecewise.spline_2d(x_points, y_points, vx, vy, t, 10)
 
-    points = [np.array([x, y]) for x, y in zip(trajectory_x, trajectory_y) ]
+    # points = [np.array([x, y]) for x, y in zip(trajectory_x, trajectory_y) ]
+
+    # print(points)
    
     point_num = 0
-    xd = points[0]
+    # xd = points[0]
 
     # K values
-    k1 = 1000
-    k2 = 7000
+    move_k = 1500
+    turn_k = 3000
 
     s_t = time.time()
 
@@ -98,6 +108,8 @@ try:
         x = p[0]
         y = p[1]
         theta = p[3]
+
+        xd = rectangle(time.time() - s_t, 20)
 
         #convert theta to radians
         theta = theta * (np.pi / 180)
@@ -110,12 +122,12 @@ try:
         r = np.linalg.norm(dist_err)
 
         # break when close to destination
-        if (r < 0.2):
-            point_num += 1
-            # move to next point as goal
-            xd = points[point_num]
-            dist_err = end - x_t
-            r = np.linalg.norm(err)
+        # if (r < 0.3):
+        #     point_num += 1
+        #     # move to next point as goal
+        #     xd = points[point_num % len(points)]
+        #     dist_err = xd - x_t
+        #     r = np.linalg.norm(dist_err)
 
         # desired angle
         angle = np.arctan2(dist_err[1], dist_err[0])
@@ -124,7 +136,7 @@ try:
         angle_diff = np.arctan2(np.sin(angle - theta), np.cos(angle - theta))
 
         # Print results to be exported to csv
-        print(time.time()-s_t, r, angle_diff, sep=",")
+        print(time.time()-s_t, xd[0], x, xd[1], y, sep=",")
         
         # Caclulate velocity and angular velocity
         v = move_k * r 
