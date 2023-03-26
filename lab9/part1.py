@@ -28,18 +28,20 @@ class Cam:
             self.cam.start()
         else:
             self.cam = cv.VideoCapture(0)
-    
-    def stop(self):
-        if not self.raspberrypi:
-            self.cam.release()
-        cv.destroyAllWindows()
-
+            
     def load_image(self):
         if self.raspberrypi:
             return self.cam.capture_array()
         else:
             _, frame = self.cam.read()
             return frame
+        
+    def stop(self):
+        if not self.raspberrypi:
+            self.cam.release()
+        cv.destroyAllWindows()
+
+    
         
 
     
@@ -63,8 +65,13 @@ try:
         lower_blue = np.array([60, 35, 140])
         upper_blue = np.array([180, 255, 255])
         
+        # May need to increase range for detection of ball in lab
+        lower_green = np.array([36, 0 , 0])
+        upper_green = np.array([86, 255, 255])
+        
         # preparing the mask to overlay
-        mask = cv.inRange(hsv, lower_blue, upper_blue)
+        # mask = cv.inRange(hsv, lower_blue, upper_blue)
+        mask = cv.inRange(hsv, lower_green, upper_green)
         
         # The black region in the mask has the value of 0,
         # so when multiplied with original image removes all non-blue regions
@@ -84,7 +91,7 @@ try:
         rows = gray.shape[0]
         circles = cv.HoughCircles(gray, cv.HOUGH_GRADIENT, 1, rows / 8,
                                 param1=100, param2=30,
-                                minRadius=1, maxRadius=100)
+                                minRadius=1, maxRadius=400)
         
         
         if circles is not None:
