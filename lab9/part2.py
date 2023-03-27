@@ -101,7 +101,11 @@ try:
         lower_blue = np.array([60, 35, 140])
         upper_blue = np.array([180, 255, 255])
         
-        ball = cam.find_ball(lower_blue, upper_blue)
+        # May need to increase range for detection of ball in lab
+        lower_green = np.array([36, 0 , 0])
+        upper_green = np.array([86, 255, 255])
+        
+        ball = cam.find_ball(lower_green, upper_green)
         
         if ball is not None:
             found = True
