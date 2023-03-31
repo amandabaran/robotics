@@ -22,7 +22,7 @@ class Cam:
        
         if raspberrypi:
             # Only works on raspberry pi
-            from picamera2 import Picamera2 
+            from picamera2 import Picamera2 as picam2
             self.cam = Picamera2()
             self.cam.configure(picam2.create_preview_configuration(main={"format": 'XRGB8888', "size": (640, 480)}))
             self.cam.start()

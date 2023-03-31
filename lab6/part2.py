@@ -1,7 +1,7 @@
-import cv2 as cv
+import cv2
 import numpy as np
 import Motor
-import time  
+import time 
 
 class Robot:
     def __init__(self):
@@ -9,7 +9,6 @@ class Robot:
         self.ultra=Ultrasonic.Ultrasonic() 
 
     def move(self, speed):
-        # move forward for 2 seconds
         self.PWM.setMotorModel(-speed,-speed,speed,speed)
 
     def stop(self):
@@ -28,12 +27,12 @@ class Cam:
        
         if raspberrypi:
             # Only works on raspberry pi
-            from picamera2 import Picamera2 
+            from picamera2 import Picamera2
             self.cam = Picamera2()
-            self.cam.configure(picam2.create_preview_configuration(main={"format": 'XRGB8888', "size": (640, 480)}))
+            self.cam.configure(Picamera2.create_preview_configuration(main={"format": 'XRGB8888', "size": (640, 480)}))
             self.cam.start()
         else:
-            self.cam = cv.VideoCapture(0)
+            self.cam = cv2.VideoCapture(0)
     
     def load_image(self):
         if self.raspberrypi:
@@ -42,31 +41,76 @@ class Cam:
             _, frame = self.cam.read()
             return frame
         
+    def find_blob(self, lower, upper):
+        # Read image
+        im = self.load_image()
+        
+        # Setup SimpleBlobDetector parameters.
+        params = cv2.SimpleBlobDetector_Params()
+        
+        # Change thresholds
+        params.minThreshold = 10;
+        params.maxThreshold = 200;
+        
+        # Filter by Area.
+        params.filterByArea = True
+        params.minArea = 1500
+        
+        # Filter by Circularity
+        params.filterByCircularity = True
+        params.minCircularity = 0.1
+        
+        # Filter by Convexity
+        params.filterByConvexity = True
+        params.minConvexity = 0.87
+        
+        # Filter by Inertia
+        params.filterByInertia = True
+        params.minInertiaRatio = 0.01
+        
+        # Create a detector with the parameters
+        ver = (cv2.__version__).split('.')
+        if int(ver[0]) < 3 :
+            detector = cv2.SimpleBlobDetector(params)
+        else : 
+            detector = cv2.SimpleBlobDetector_create(params)
+        
+        # Detect blobs.
+        keypoints = detector.detect(im)
+        
+        # Draw detected blobs as red circles.
+        # cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS ensures the size of the circle corresponds to the size of blob
+        im_with_keypoints = cv2.drawKeypoints(im, keypoints, np.array([]), (0,0,255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+        
+        # Show keypoints
+        cv2.imshow("Keypoints", im_with_keypoints)
+        cv2.waitKey(0)
+        
     def find_ball(self, lower_val, upper_val):
         frame = self.load_image()
         
         # converts the BGR color space of image to HSV color space
-        hsv = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
+        hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
         
         # preparing the mask to overlay
-        mask = cv.inRange(hsv, lower_val, upper_val)
+        mask = cv2.inRange(hsv, lower_val, upper_val)
         
         # The black region in the mask has the value of 0,
         # so when multiplied with original image removes all non-blue regions
-        result = cv.bitwise_and(frame, frame, mask = mask)
+        result = cv2.bitwise_and(frame, frame, mask = mask)
     
-        # cv.imshow('frame', frame)
-        # cv.imshow('mask', mask)
-        # cv.imshow('result', result)
+        # cv2.imshow('frame', frame)
+        # cv2.imshow('mask', mask)
+        # cv2.imshow('result', result)
         
         # covert to grayscale and apply blur to reduce noise
-        gray = cv.cvtColor(result, cv.COLOR_BGR2GRAY)
-        gray = cv.medianBlur(gray, 5)
+        gray = cv2.cvtColor(result, cv2.COLOR_BGR2GRAY)
+        gray = cv2.medianBlur(gray, 5)
         
         
         # Hough cirlce transform
         rows = gray.shape[0]
-        circles = cv.HoughCircles(gray, cv.HOUGH_GRADIENT, 1, rows / 8,
+        circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 1, rows / 8,
                                 param1=100, param2=30,
                                 minRadius=1, maxRadius=100)
         
@@ -88,12 +132,12 @@ class Cam:
     def stop(self):
         if not self.raspberrypi:
             self.cam.release()
-        cv.destroyAllWindows()
+        cv2.destroyAllWindows()
     
 try:
     
     cam = Cam()
-    robot = Robot(True)
+    robot = Robot()
     
     while True:
       
