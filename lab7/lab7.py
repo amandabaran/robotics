@@ -187,7 +187,7 @@ try:
 
     while True:
     
-        ball, gray, dist, theta = cam.find_ball(np.array([H_low, S_low, V_low]), np.array([H_high, S_high, V_high]))
+        ball, gray, dist, theta = cam.find_duck(np.array([H_low, S_low, V_low]), np.array([H_high, S_high, V_high]))
           
         if ball is None:
             found_ball = False
