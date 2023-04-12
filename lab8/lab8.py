@@ -243,13 +243,10 @@ def drive_in_circle():
         u[u < -1500.] = -1500.
         
         # Look for ducks
-        found_blob = False
         
         blob, gray = cam.find_duck(np.array([H_low, S_low, V_low]), np.array([H_high, S_high, V_high]))
         
-        if blob is None:
-            found_blob = False
-        else :
+        if blob is not None:
             found_blob = True
             dist = calc_distance(blob[2]) / 100 #convert to m
             theta = calc_theta(blob[0])
