@@ -98,10 +98,6 @@ class Cam:
         # so when multiplied with original image removes all non-blue regions
         result = cv2.bitwise_and(frame, frame, mask = mask)
         
-        # cv2.imshow('frame', frame)
-        # cv2.imshow('mask', mask)
-        # cv2.imshow('result', result)
-        
         result = cv2.bitwise_not(result)
         
         # covert to grayscale and apply blur to reduce noise
@@ -150,8 +146,6 @@ class Cam:
         
         blobs = []
         for k in keypoints:
-            # u, v, size
-            # print("U: ", k.pt[0], "\nV: ", k.pt[1], "\nSize: ", k.size, "\n\n\n\n")
             blobs.append([k.pt[0], k.pt[1], k.size])
         
         if len(blobs) != 0:
@@ -263,9 +257,15 @@ def drive_in_circle():
             duck_x = dist * np.cos(theta) + .16 #add the distance from the optitrack balls to the camera
             duck_y = dist * np.sin(theta)
             
+            p1 = x_t[0]
+            p2 = x_t[1]
+            
+            t_matrix = np.array([ [np.cos(theta), -np.sin(theta), p1], 
+                       [np.sin(theta), np.cos(theta), p2], 
+                       [0, 0, 1] ])
+            
             duck_p = np.array([duck_x, duck_y]) 
-            rot_matrix = np.array([[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]])
-            duck = np.dot(rot_matrix, duck_p) + x_t
+            duck = np.dot(t_matrix, duck_p)
         
             print(duck[0], duck[1], sep=",")
 
