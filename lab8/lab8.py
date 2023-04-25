@@ -257,6 +257,7 @@ def drive_in_circle():
             p1 = x_t[0]
             p2 = x_t[1]
             
+            # considers 3 dimensions --> homogenous matrix
             t_matrix = np.array([ [np.cos(theta), -np.sin(theta), p1], 
                        [np.sin(theta), np.cos(theta), p2], 
                        [0, 0, 1] ])
